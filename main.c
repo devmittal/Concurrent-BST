@@ -302,7 +302,7 @@ void* thread_main(void* args)
 int main()
 {
 	int data;
-	NUM_THREADS = 12;
+	NUM_THREADS = 6;
 
 	global_init();
 
