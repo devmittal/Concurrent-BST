@@ -1,10 +1,13 @@
 CC = cc
 
-concurrent_tree: main.o
-		$(CC) -o concurrent_tree -pthread main.o
+concurrent_tree: main.o fine_grained_lock_BST.o
+		$(CC) -o concurrent_tree -pthread main.o fine_grained_lock_BST.o
 
-main.o: main.c
+main.o: main.c fine_grained_lock_BST.h
 		$(CC) -c -pthread main.c
+
+fine_grained_lock_BST.o: fine_grained_lock_BST.c fine_grained_lock_BST.h
+		$(CC) -c -pthread fine_grained_lock_BST.c
 
 clean: 
 		rm -f *.o
