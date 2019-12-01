@@ -1,6 +1,7 @@
+#ifndef FINE_GRAINED_LOCK_BST_H
+#define FINE_GRAINED_LOCK_BST_H
+
 #include <pthread.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 struct node {
 	int key;	//BST sorted by key
@@ -17,5 +18,7 @@ extern pthread_mutex_t tree_lock;
 struct node* CreateNewNode(int key, int value);
 void put(struct node* root, struct node* parent, int key, int value);
 void get(struct node* root, struct node* parent, int key, int tid);
-void range_queries(struct node* root, struct node* parent, int lo, int hi);
+void range_queries(struct node* root, struct node* parent, int lo, int hi, int tid);
 void inorder(struct node* root);
+
+#endif /* FINE_GRAINED_LOCK_BST_H */

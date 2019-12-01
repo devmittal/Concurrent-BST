@@ -1,4 +1,6 @@
 #include "fine_grained_lock_BST.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 struct node* CreateNewNode(int key, int value)
 {
@@ -140,9 +142,9 @@ void get(struct node* root, struct node* parent, int key, int tid)
 	}
 }
 
-void range_queries(struct node* root, struct node* parent, int lo, int hi)
+void range_queries(struct node* root, struct node* parent, int lo, int hi, int tid)
 {
-	/*if(parent == NULL)
+	if(parent == NULL)
 	{
 		//printf("TID %d locking tree lock in get\n", tid);
 		pthread_mutex_lock(&tree_lock);
@@ -159,40 +161,32 @@ void range_queries(struct node* root, struct node* parent, int lo, int hi)
 		root = actual_root;
 		//printf("TID %d unlocking tree lock in get\n", tid);
 		pthread_mutex_unlock(&tree_lock);
-	}*/
-
-	if(actual_root == NULL || (lo > hi))
-	{
-		printf("Invalid parameters\n");
-		return;
-	}
-
-	//pthread_mutex_lock(&root->lock);
-
-	if(root == NULL)
-	{
-		//pthread_mutex_unlock(&root->lock);
-		return;
 	}
 
 	if(lo < root->key)
 	{
-		//pthread_mutex_lock(&root->left->lock);
-		//pthread_mutex_unlock(&root->lock);
-		range_queries(root->left, root, lo, hi);
+		if(root->left != NULL)
+		{
+			pthread_mutex_lock(&root->left->lock);
+			pthread_mutex_unlock(&root->lock);
+			range_queries(root->left, root, lo, hi, tid);
+		}
 	}
 
 	if(lo <= root->key && hi >= root->key)
-		printf("Range Queries -> Key->%d; Value->%d\n", root->key, root->data);
+		printf("Range Queries for TID %d -> Key->%d; Value->%d\n", tid, root->key, root->data);
 
 	if(hi > root->key)
 	{
-		//pthread_mutex_lock(&root->right->lock);
-		//pthread_mutex_unlock(&root->lock);
-		range_queries(root->right, root, lo, hi);
+		if(root->right != NULL)
+		{
+			pthread_mutex_lock(&root->right->lock);
+			pthread_mutex_unlock(&root->lock);
+			range_queries(root->right, root, lo, hi, tid);
+		}
 	}
 
-	//pthread_mutex_unlock(&root->lock);
+	pthread_mutex_unlock(&root->lock);
 }
 
 void inorder(struct node* root)
@@ -201,6 +195,6 @@ void inorder(struct node* root)
 		return;
 
 	inorder(root->left);
-	printf("Key->%d\n", root->key);
+	printf("Key->%d; Value->%d\n", root->key, root->data);
 	inorder(root->right);
 }
