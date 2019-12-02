@@ -22,7 +22,7 @@ void put_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int key, int v
 		{
 			actual_root_rw = CreateNewNode_rw(key,value);
 			//printf("TID %d unlocking tree lock in put_rw\n", value);
-			printf("\nInserted root key %d\n", actual_root_rw->key);
+			//printf("\nInserted root key %d\n", actual_root_rw->key);
 			pthread_rwlock_unlock(&tree_lock_rw);
 			return;
 		}
@@ -40,7 +40,7 @@ void put_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int key, int v
 		{
 			root->left = CreateNewNode_rw(key, value);
 			//printf("TID %d unlocking root %d in put_rw\n", value, root->key);
-			printf("\nInserted key %d\n", root->left->key);
+			//printf("\nInserted key %d\n", root->left->key);
 			pthread_rwlock_unlock(&root->lock);
 		}
 		else
@@ -58,7 +58,7 @@ void put_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int key, int v
 		{
 			root->right = CreateNewNode_rw(key, value);
 			//printf("TID %d unlocking root %d in put_rw\n", value, root->key);
-			printf("\nInserted key %d\n", root->right->key);
+			//printf("\nInserted key %d\n", root->right->key);
 			pthread_rwlock_unlock(&root->lock);
 		}
 		else
@@ -73,7 +73,7 @@ void put_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int key, int v
 	else
 	{
 		root->data = value; //In case of same key, update data
-		printf("\nUpdated key %d with value %d\n", root->key, root->data);
+		//printf("\nUpdated key %d with value %d\n", root->key, root->data);
 		//printf("TID %d unlocking root %d in put_rw\n", value, root->key);
 		pthread_rwlock_unlock(&root->lock);
 	}
@@ -87,7 +87,7 @@ void get_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int key, int t
 		pthread_rwlock_rdlock(&tree_lock_rw);
 		if(actual_root_rw == NULL)
 		{
-			printf("Tree not populated yet\n");
+			//printf("Tree not populated yet\n");
 			//printf("TID %d unlocking tree lock in get_rw\n", tid);
 			pthread_rwlock_unlock(&tree_lock_rw);
 			return;
@@ -105,7 +105,7 @@ void get_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int key, int t
 		if(root->left == NULL)
 		{
 			pthread_rwlock_unlock(&root->lock);
-			printf("Node does not exist. TID %d\n", tid);
+			//printf("Node does not exist. TID %d\n", tid);
 			return;
 		}
 		else
@@ -122,7 +122,7 @@ void get_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int key, int t
 		if(root->right == NULL)
 		{
 			pthread_rwlock_unlock(&root->lock);
-			printf("Node does not exist. TID %d\n", tid);
+			//printf("Node does not exist. TID %d\n", tid);
 			return;
 		}
 		else
@@ -136,7 +136,7 @@ void get_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int key, int t
 	}
 	else
 	{
-		printf("Key->%d; Value->%d\n", root->key, root->data); 
+		//printf("Key->%d; Value->%d\n", root->key, root->data); 
 		//printf("TID %d unlocking root %d in get_rw\n", tid, root->key);
 		pthread_rwlock_unlock(&root->lock);
 	}
@@ -144,14 +144,13 @@ void get_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int key, int t
 
 void range_queries_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int lo, int hi, int tid)
 {
-	int lock_status = 0;
 	if(parent == NULL)
 	{
 		//printf("TID %d locking tree lock in range queries\n", tid);
 		pthread_rwlock_rdlock(&tree_lock_rw);
 		if(actual_root_rw == NULL)
 		{
-			printf("Tree not populated yet\n");
+			//printf("Tree not populated yet\n");
 			//printf("TID %d unlocking tree lock in range queries\n", tid);
 			pthread_rwlock_unlock(&tree_lock_rw);
 			return;
@@ -178,7 +177,7 @@ void range_queries_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int 
 	}
 
 	if(lo <= root->key && hi >= root->key)
-		printf("Range Queries for TID %d -> Key->%d; Value->%d\n", tid, root->key, root->data);
+		//printf("Range Queries for TID %d -> Key->%d; Value->%d\n", tid, root->key, root->data);
 
 	if(hi > root->key)
 	{

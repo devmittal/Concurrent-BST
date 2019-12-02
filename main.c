@@ -12,6 +12,12 @@ size_t NUM_THREADS;
 int lock_used;
 struct timespec start, time_end;
 pthread_barrier_t bar;
+int key_limit;
+int NUM_ITERATIONS;
+
+#define HIGH_CONTENTION	5
+#define LOW_CONTENTION	1000000
+#define MAX_OPERATIONS 200000
 
 /* Extern Variables */
 struct node* actual_root;
@@ -37,6 +43,7 @@ void global_init()
 		pthread_rwlock_init(&tree_lock_rw, NULL);
 	}
 
+	NUM_ITERATIONS = MAX_OPERATIONS/(NUM_THREADS/3);
 	pthread_barrier_init(&bar, NULL, NUM_THREADS);
 	threads = (pthread_t*)malloc(NUM_THREADS*sizeof(pthread_t));
 	args = (size_t*)malloc(NUM_THREADS*sizeof(size_t));
@@ -78,67 +85,47 @@ void* thread_main(void* args)
 
 	if(tid <= NUM_THREADS/3)
 	{
-		//srandom(5);	
-		srandom(((time(0) & 0xFFFFFFF0) | (tid+1)));
-		//rand_key = random()%100;
-		//printf("TID: %ld; Random Num: %ld\n", tid, (random()%100));
-
-		if(lock_used == FINE_GRAINED)
-			put(actual_root, NULL, (random()%1000), tid);
-		else
-			put_rw(actual_root_rw, NULL, (random()%1000), tid);
+		for(int i = 0; i<NUM_ITERATIONS; i++)
+		{
+			srandom(((time(0) & 0xFFFFFFF0) | (tid) | (i*3)));
+			
+			//printf("TID: %ld; Random Num: %ld\n", tid, (random()%1000));
+			
+			if(lock_used == FINE_GRAINED)
+				put(actual_root, NULL, (random()%key_limit), tid);
+			else
+				put_rw(actual_root_rw, NULL, (random()%key_limit), tid);
+		}
 	}
 	else if((tid > NUM_THREADS/3) && (tid <= ((NUM_THREADS/3)*2)))
 	{
-		//srandom(5);
-		srandom(((time(0) & 0xFFFFFFF01) | ((tid-NUM_THREADS/3)+1)));
-		//printf("TID: %ld; Random Num: %ld\n", tid, (random()%100));
-		if(lock_used == FINE_GRAINED)
-			get(actual_root, NULL, (random()%1000), tid);
-		else
-			get_rw(actual_root_rw, NULL, (random()%1000), tid);
+		for(int i = 0; i<NUM_ITERATIONS; i++)
+		{
+			srandom(((time(0) & 0xFFFFFFF0) | (tid-(NUM_THREADS/3)) | (i*3)));
+			
+			//printf("TID: %ld; Random Num: %ld\n", tid, (random()%1000));
+
+			if(lock_used == FINE_GRAINED)		
+				get(actual_root, NULL, (random()%key_limit), tid);
+			else
+				get_rw(actual_root_rw, NULL, (random()%key_limit), tid);
+		}
 	}
 	else
 	{
 		do
 		{
-			lo_key = random()%1000;
-			hi_key = random()%1000;
+			lo_key = random()%key_limit;
+			hi_key = random()%key_limit;
 		}while(lo_key > hi_key);
-		printf("\nRange Queries btw %d and %d for TID %ld\n", lo_key, hi_key, tid);
+
+		//printf("\nRange Queries btw %d and %d for TID %ld\n", lo_key, hi_key, tid);
 
 		if(lock_used == FINE_GRAINED)
 			range_queries(actual_root, NULL, lo_key, hi_key, tid);
 		else
 			range_queries_rw(actual_root_rw, NULL, lo_key, hi_key, tid);
 	}
-
-	/*if(tid <= NUM_THREADS/2)
-	{
-		if(lock_used == FINE_GRAINED)
-		{
-			for(int i = 0; i<5; i++)
-				put(actual_root, NULL, (random()%100000), tid);
-		}
-		else
-		{
-			for(int i = 0; i<5000; i++)
-				put_rw(actual_root_rw, NULL, (random()%100000), tid);
-		}
-	}
-	else
-	{
-		if(lock_used == FINE_GRAINED)
-		{
-			for(int i = 0; i<5; i++)
-				put(actual_root, NULL, (random()%100000), tid);
-		}
-		else
-		{
-			for(int i = 0; i<5000; i++)
-				get_rw(actual_root_rw, NULL, (random()%100000), tid);
-		}	
-	}*/
 
 	pthread_barrier_wait(&bar);
 
@@ -157,19 +144,18 @@ int main(int argc, char **argv)
 	/* Default values; if user does not specify */
 	NUM_THREADS = 6;
 	lock_used = FINE_GRAINED;
+	key_limit = LOW_CONTENTION;
 
 	static struct option long_options[] = {
 		{"h", no_argument, 0, 'h'},      //Optional arg - print name
-		{"o",    required_argument, 0, 'o'},//Optional arg - output sorted list to file
 		{"t",    required_argument, 0, 't'},//Optional arg - specify number of threads
-		{"i",    required_argument, 0, 'i'},//Optional arg - No. of iterations
-		{"bar",  required_argument, 0, 'b'},//Optional arg - Barrier to use
+		{"test",  required_argument, 0, 'e'},//Optional arg - Barrier to use
 		{"lock", required_argument, 0, 'l'},//Optional arg - lock to use
 		{0     , 0          , 0,  0 }
 	};
 
 	/* Loop to get all otpional arguments */
-	while((c = getopt_long(argc, argv, "ho:t:i:b:l:", long_options, &option_index)) != -1)
+	while((c = getopt_long(argc, argv, "ht:e:l:", long_options, &option_index)) != -1)
 	{
 		/* Handle Optional Arguments */		
 		switch(c)
@@ -178,17 +164,14 @@ int main(int argc, char **argv)
 					  return 0; 
 					  break;
 
-			//case 'o': output_filename = optarg;
-			//		  break;
+			case 'e': if(!strcmp(optarg, "high"))
+					  	key_limit = HIGH_CONTENTION;
+					  else
+					  	key_limit = LOW_CONTENTION;
+					  break;
 
 			case 't': NUM_THREADS = atoi(optarg);
 					  break;
-
-			/*case 'i': NUM_ITERATIONS = atoi(optarg);
-					  break;
-
-			case 'b': barr = optarg;
-					  break;*/
 
 			case 'l': if(!strcmp(optarg, "fg"))
 					  	lock_used = FINE_GRAINED;

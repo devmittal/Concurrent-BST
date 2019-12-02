@@ -22,7 +22,7 @@ void put(struct node* root, struct node* parent, int key, int value)
 		{
 			actual_root = CreateNewNode(key,value);
 			//printf("TID %d unlocking tree lock in put\n", value);
-			printf("\nInserted root key %d\n", actual_root->key);
+			//printf("\nInserted root key %d\n", actual_root->key);
 			pthread_mutex_unlock(&tree_lock);
 			return;
 		}
@@ -40,7 +40,7 @@ void put(struct node* root, struct node* parent, int key, int value)
 		{
 			root->left = CreateNewNode(key, value);
 			//printf("TID %d unlocking root %d in put\n", value, root->key);
-			printf("\nInserted key %d\n", root->left->key);
+			//printf("\nInserted key %d\n", root->left->key);
 			pthread_mutex_unlock(&root->lock);
 		}
 		else
@@ -58,7 +58,7 @@ void put(struct node* root, struct node* parent, int key, int value)
 		{
 			root->right = CreateNewNode(key, value);
 			//printf("TID %d unlocking root %d in put\n", value, root->key);
-			printf("\nInserted key %d\n", root->right->key);
+			//printf("\nInserted key %d\n", root->right->key);
 			pthread_mutex_unlock(&root->lock);
 		}
 		else
@@ -73,7 +73,7 @@ void put(struct node* root, struct node* parent, int key, int value)
 	else
 	{
 		root->data = value; //In case of same key, update data
-		printf("\nUpdated key %d with value %d\n", root->key, root->data);
+		//printf("\nUpdated key %d with value %d\n", root->key, root->data);
 		//printf("TID %d unlocking root %d in put\n", value, root->key);
 		pthread_mutex_unlock(&root->lock);
 	}
@@ -87,7 +87,7 @@ void get(struct node* root, struct node* parent, int key, int tid)
 		pthread_mutex_lock(&tree_lock);
 		if(actual_root == NULL)
 		{
-			printf("Tree not populated yet\n");
+			//printf("Tree not populated yet\n");
 			//printf("TID %d unlocking tree lock in get\n", tid);
 			pthread_mutex_unlock(&tree_lock);
 			return;
@@ -105,7 +105,7 @@ void get(struct node* root, struct node* parent, int key, int tid)
 		if(root->left == NULL)
 		{
 			pthread_mutex_unlock(&root->lock);
-			printf("Node does not exist. TID %d\n", tid);
+			//printf("Node does not exist. TID %d\n", tid);
 			return;
 		}
 		else
@@ -122,7 +122,7 @@ void get(struct node* root, struct node* parent, int key, int tid)
 		if(root->right == NULL)
 		{
 			pthread_mutex_unlock(&root->lock);
-			printf("Node does not exist. TID %d\n", tid);
+			//printf("Node does not exist. TID %d\n", tid);
 			return;
 		}
 		else
@@ -136,7 +136,7 @@ void get(struct node* root, struct node* parent, int key, int tid)
 	}
 	else
 	{
-		printf("Key->%d; Value->%d\n", root->key, root->data); 
+		//printf("Key->%d; Value->%d\n", root->key, root->data); 
 		//printf("TID %d unlocking root %d in get\n", tid, root->key);
 		pthread_mutex_unlock(&root->lock);
 	}
@@ -150,7 +150,7 @@ void range_queries(struct node* root, struct node* parent, int lo, int hi, int t
 		pthread_mutex_lock(&tree_lock);
 		if(actual_root == NULL)
 		{
-			printf("Tree not populated yet\n");
+			//printf("Tree not populated yet\n");
 			//printf("TID %d unlocking tree lock in get\n", tid);
 			pthread_mutex_unlock(&tree_lock);
 			return;
@@ -170,11 +170,12 @@ void range_queries(struct node* root, struct node* parent, int lo, int hi, int t
 			pthread_mutex_lock(&root->left->lock);
 			pthread_mutex_unlock(&root->lock);
 			range_queries(root->left, root, lo, hi, tid);
+			pthread_mutex_lock(&root->lock);
 		}
 	}
 
 	if(lo <= root->key && hi >= root->key)
-		printf("Range Queries for TID %d -> Key->%d; Value->%d\n", tid, root->key, root->data);
+		//printf("Range Queries for TID %d -> Key->%d; Value->%d\n", tid, root->key, root->data);
 
 	if(hi > root->key)
 	{
@@ -183,6 +184,7 @@ void range_queries(struct node* root, struct node* parent, int lo, int hi, int t
 			pthread_mutex_lock(&root->right->lock);
 			pthread_mutex_unlock(&root->lock);
 			range_queries(root->right, root, lo, hi, tid);
+			pthread_mutex_lock(&root->lock);
 		}
 	}
 
