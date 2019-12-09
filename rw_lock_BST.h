@@ -1,3 +1,12 @@
+/*****************************************************************************
+​ ​* ​ ​ @file​ ​  		rw_lock_BST.h
+​ * ​ ​ @brief​ ​ 		Node structure and function declaration of corresponding
+ *					C file.
+​ * ​ ​ @Author(s)​  	​​Devansh Mittal
+​ * ​ ​ @Date​ ​​ 		December 6th, 2019
+​ * ​ ​ @version​ ​ 		1.0
+*****************************************************************************/
+
 #ifndef RW_LOCK_H
 #define RW_LOCK_H
 
@@ -11,14 +20,14 @@ struct rw_BST_node {
 	pthread_rwlock_t lock;
 };
 
-extern struct rw_BST_node* actual_root_rw;
-extern pthread_rwlock_t tree_lock_rw;
+extern struct rw_BST_node* actual_root_rw; //main root of tree
+extern pthread_rwlock_t tree_lock_rw; //tree lock
 
 /* Function Declaration */
 struct rw_BST_node* CreateNewNode_rw(int key, int value);
-void get_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int key, int tid);
+void get_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int key, int tid, int actual_value);
 void put_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int key, int value);
-void range_queries_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int lo, int hi, int tid);
-void inorder_rw(struct rw_BST_node* root);
+int range_queries_rw(struct rw_BST_node* root, struct rw_BST_node* parent, int lo, int hi, int tid);
+int inorder_rw(struct rw_BST_node* root);
 
 #endif /* RW_LOCK_BST_H */
